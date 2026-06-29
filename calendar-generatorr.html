@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CalGen · Availability Calendar Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;500;600&family=Josefin+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eaf5ec;
+    --panel:#ffffff;
+    --panel-2:#f0f8f1;
+    --line:#cfe6d4;
+    --text:#15301d;
+    --muted:#5e8068;
+    --accent:#1faa59;
+    --accent-2:#16c47f;
+    --accent-soft:#d6f3df;
+    --ink:#ffffff;
+    --radius:18px;
+    --shadow:0 6px 0 rgba(20,90,45,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;}
+  body{padding-bottom:env(safe-area-inset-bottom);}
+
+  .wrap{max-width:760px;margin:0 auto;padding:18px 16px 120px;}
+  header.app{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;}
+  header.app .brand{display:flex;align-items:center;gap:11px;}
+  header.app .logo{
+    width:42px;height:42px;border-radius:13px;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    box-shadow:0 4px 0 rgba(20,90,45,.25);transform:rotate(-4deg);
+  }
+  header.app h1{font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:30px;letter-spacing:.5px;margin:0;line-height:1;}
+  header.app h1 .g{color:var(--accent);}
+  header.app .sub{color:var(--muted);font-size:11px;display:block;margin-top:2px;letter-spacing:.3px;}
+
+  .preview-frame{
+    background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin:14px 0;display:flex;flex-direction:column;align-items:center;gap:12px;
+    box-shadow:var(--shadow);
+  }
+  #stage{width:100%;display:flex;justify-content:center;}
+  #cal{
+    width:100%;max-width:380px;border-radius:14px;box-shadow:0 10px 26px rgba(20,90,45,.18);
+    display:block;height:auto;
+  }
+
+  .section{background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .section h2{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--accent);margin:0 0 14px;font-weight:700;}
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  label.lbl{display:block;font-size:13px;color:var(--text);margin-bottom:7px;font-weight:500;}
+  .hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4;}
+
+  select,input[type=text],input[type=number]{
+    width:100%;background:var(--panel-2);border:2px solid var(--line);color:var(--text);
+    border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;appearance:none;font-weight:500;
+  }
+  select:focus,input:focus{outline:none;border-color:var(--accent);}
+
+  .row{display:flex;gap:10px;}
+  .row > .field{flex:1;margin-bottom:0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .seg{display:flex;background:var(--panel-2);border:2px solid var(--line);border-radius:12px;overflow:hidden;padding:3px;gap:3px;}
+  .seg button{flex:1;background:transparent;border:0;color:var(--muted);padding:9px 6px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600;transition:.15s;border-radius:9px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{background:var(--panel-2);border:2px solid var(--line);color:var(--text);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-weight:500;}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .chip .x{opacity:.7;font-size:15px;line-height:1;}
+
+  .upload{
+    border:2.5px dashed var(--line);border-radius:14px;padding:18px;text-align:center;cursor:pointer;
+    background:var(--panel-2);transition:.15s;
+  }
+  .upload:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .upload.has{padding:10px;border-style:solid;}
+  .upload .ico{font-size:22px;}
+  .upload .t{font-size:13px;color:var(--text);margin-top:6px;font-weight:600;}
+  .upload .s{font-size:11px;color:var(--muted);margin-top:3px;}
+  #thumb{max-height:80px;border-radius:10px;margin-top:8px;}
+
+  .color-row{display:flex;align-items:center;gap:10px;}
+  input[type=color]{width:46px;height:38px;padding:2px;border:2px solid var(--line);border-radius:10px;background:var(--panel-2);cursor:pointer;}
+
+  .font-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;}
+  .font-opt{background:var(--panel-2);border:2px solid var(--line);border-radius:12px;padding:11px 10px;cursor:pointer;text-align:center;transition:.12s;}
+  .font-opt.on{border-color:var(--accent);background:var(--accent-soft);}
+  .font-opt .name{font-size:24px;color:var(--text);line-height:1.1;}
+  .font-opt.on .name{color:var(--accent);}
+  .font-opt .meta{font-size:10px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+
+  /* Day editor */
+  .daycal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:6px;}
+  .dh{text-align:center;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:3px 0;font-weight:600;}
+  .dcell{
+    aspect-ratio:1/1.18;background:var(--panel-2);border:2px solid var(--line);border-radius:11px;
+    padding:4px 3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;overflow:hidden;transition:.1s;
+  }
+  .dcell:not(.empty):active{transform:scale(.94);}
+  .dcell.empty{background:transparent;border-color:transparent;cursor:default;}
+  .dcell.has{border-color:var(--accent);background:var(--accent-soft);}
+  .dcell .dn{font-size:12px;font-weight:700;color:var(--text);}
+  .dcell.has .dn{color:var(--accent);}
+  .dcell .tms{display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:2px;}
+  .dcell .tms span{font-size:8px;color:var(--muted);line-height:1.15;font-weight:600;}
+
+  /* time picker sheet */
+  .sheet-bg{position:fixed;inset:0;background:rgba(10,40,22,.45);backdrop-filter:blur(3px);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+  .sheet-bg.show{display:flex;}
+  .sheet{background:var(--panel);width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:18px 18px 28px;border:2px solid var(--line);border-bottom:0;max-height:80vh;overflow-y:auto;}
+  .sheet h3{margin:0 0 3px;font-size:20px;font-family:'Josefin Sans',sans-serif;font-weight:600;}
+  .sheet .sd{color:var(--muted);font-size:12px;margin-bottom:16px;font-weight:500;}
+  .preset-times{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  .pt{background:var(--panel-2);border:2px solid var(--line);border-radius:11px;padding:11px 4px;font-size:14px;color:var(--text);cursor:pointer;transition:.1s;text-align:center;font-weight:600;}
+  .pt.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .add-custom{display:flex;gap:8px;margin-bottom:16px;}
+  .add-custom input{flex:1;}
+  .add-custom button{background:var(--accent-soft);border:2px solid var(--line);color:var(--accent);border-radius:11px;padding:0 16px;cursor:pointer;font-size:14px;font-weight:700;}
+  .sel-list{display:flex;flex-wrap:wrap;gap:7px;min-height:20px;margin-bottom:8px;}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+  .sheet-actions button{flex:1;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;border:2px solid var(--line);}
+  .btn-ghost{background:transparent;color:var(--muted);}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  .bulk{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .bulk button{background:var(--panel-2);border:2px solid var(--line);color:var(--muted);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:600;}
+  .bulk button:active{background:var(--accent-soft);}
+
+  /* export bar */
+  .exportbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 28%);padding:18px 16px calc(18px + env(safe-area-inset-bottom));z-index:30;}
+  .exportbar .inner{max-width:760px;margin:0 auto;display:flex;gap:10px;}
+  .exportbar button{flex:1;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;border:0;letter-spacing:.3px;}
+  #dlBtn{background:var(--accent);color:#fff;box-shadow:0 5px 0 rgba(20,90,45,.3);}
+  #dlBtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(20,90,45,.3);}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:520px){.twocol{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <div class="brand">
+      <div class="logo">🗓️</div>
+      <div>
+        <h1>Cal<span class="g">Gen</span></h1>
+        <span class="sub">make your month look good ✦</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="preview-frame">
+    <div id="stage"><canvas id="cal"></canvas></div>
+    <div class="hint" style="text-align:center">Tap days below to set times · preview updates live</div>
+  </div>
+
+  <!-- BASICS -->
+  <div class="section">
+    <h2>Month &amp; layout</h2>
+    <div class="row">
+      <div class="field">
+        <label class="lbl">Year</label>
+        <input type="number" id="year" value="2026" min="2000" max="2100">
+      </div>
+      <div class="field">
+        <label class="lbl">Month</label>
+        <select id="month">
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5" selected>June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label class="lbl">Week starts on</label>
+      <div class="seg" id="weekStart">
+        <button data-v="1" class="on">Monday</button>
+        <button data-v="0">Sunday</button>
+      </div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label class="lbl">Weekday labels</label>
+      <div class="seg" id="dayLabelStyle">
+        <button data-v="three" class="on">MON</button>
+        <button data-v="one">M</button>
+        <button data-v="tc">一</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIMENSIONS -->
+  <div class="section">
+    <h2>Canvas dimensions</h2>
+    <div class="field">
+      <label class="lbl">Preset</label>
+      <select id="preset">
+        <option value="1080x1920">Phone story · 1080 × 1920 (9:16)</option>
+        <option value="1080x1350">Portrait post · 1080 × 1350 (4:5)</option>
+        <option value="1080x1080">Square · 1080 × 1080 (1:1)</option>
+        <option value="1242x2208">Tall phone · 1242 × 2208</option>
+        <option value="custom">Custom…</option>
+      </select>
+    </div>
+    <div class="grid2" id="customDims" style="display:none">
+      <div class="field"><label class="lbl">Width (px)</label><input type="number" id="cw" value="1080"></div>
+      <div class="field"><label class="lbl">Height (px)</label><input type="number" id="ch" value="1920"></div>
+    </div>
+  </div>
+
+  <!-- BACKGROUND -->
+  <div class="section">
+    <h2>Background</h2>
+    <div class="field">
+      <div class="upload" id="upZone">
+        <input type="file" id="upFile" accept="image/*" hidden>
+        <div class="ico">⬆</div>
+        <div class="t">Upload background image</div>
+        <div class="s">Filled to cover · JPG or PNG</div>
+        <img id="thumb" style="display:none">
+      </div>
+      <div class="hint">No image? A solid color is used instead.</div>
+    </div>
+    <div class="twocol">
+      <div class="field">
+        <label class="lbl">Fallback / tint color</label>
+        <div class="color-row"><input type="color" id="bgColor" value="#1a6fa3"><span class="hint" style="margin:0">used if no image</span></div>
+      </div>
+      <div class="field">
+        <label class="lbl">Darken overlay</label>
+        <input type="range" id="overlay" min="0" max="70" value="0" style="width:100%">
+        <div class="hint">Helps text pop on busy photos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPE -->
+  <div class="section">
+    <h2>Font</h2>
+    <div class="font-grid" id="fontGrid"></div>
+    <div class="twocol" style="margin-top:14px">
+      <div class="field">
+        <label class="lbl">Text color</label>
+        <div class="color-row"><input type="color" id="textColor" value="#ffffff"></div>
+      </div>
+      <div class="field">
+        <label class="lbl">Text size</label>
+        <div class="seg" id="textScale">
+          <button data-v="0.85">S</button>
+          <button data-v="1" class="on">M</button>
+          <button data-v="1.18">L</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNATURE -->
+  <div class="section">
+    <h2>Title &amp; signature</h2>
+    <div class="field">
+      <label class="lbl">Show month name at top</label>
+      <div class="seg" id="showMonth">
+        <button data-v="1" class="on">Yes</button>
+        <button data-v="0">No</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl">Signature text <span class="hint" style="display:inline">(corner — like “-EtOH-” or “Jac 六月時段”)</span></label>
+      <input type="text" id="sig" placeholder="e.g. -EtOH-  /  Jac 六月時段" value="">
+    </div>
+    <div class="field">
+      <label class="lbl">Signature position</label>
+      <div class="seg" id="sigPos">
+        <button data-v="bl">Bottom-left</button>
+        <button data-v="br" class="on">Bottom-right</button>
+        <button data-v="bc">Bottom-center</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMES -->
+  <div class="section">
+    <h2>Availability</h2>
+    <div class="hint" style="margin-bottom:8px">Tap any day to add or edit times.</div>
+    <div class="daycal" id="dayHeaders"></div>
+    <div class="daycal" id="dayGrid"></div>
+    <div class="bulk">
+      <button id="bulkClear">Clear all</button>
+      <button id="bulkWeekdays">Weekdays → preset</button>
+      <button id="bulkAll">All days → preset</button>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label class="lbl">Default preset times <span class="hint" style="display:inline">(for the buttons above)</span></label>
+      <input type="text" id="defaultTimes" value="11:00, 14:00, 18:00">
+      <div class="hint">Comma-separated. Used by the bulk fill buttons.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TIME SHEET -->
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet">
+    <h3 id="sheetTitle">Times</h3>
+    <div class="sd" id="sheetSub"></div>
+    <div class="sel-list" id="selList"></div>
+    <label class="lbl" style="margin-top:6px">Quick add</label>
+    <div class="preset-times" id="presetTimes"></div>
+    <label class="lbl">Custom time</label>
+    <div class="add-custom">
+      <input type="text" id="customTime" placeholder="e.g. 09:30 or 20:00" inputmode="numeric">
+      <button id="addCustom">Add</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="sheetClear">Clear day</button>
+      <button class="btn-primary" id="sheetDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div class="exportbar">
+  <div class="inner">
+    <button id="dlBtn">Download PNG</button>
+  </div>
+</div>
+
+<script>
+//// ---- state ----
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHS_TC=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+const FONTS=[
+  {id:'cormorant',label:'Cormorant',css:"'Cormorant Garamond', serif",kind:'Serif'},
+  {id:'playfair',label:'Playfair',css:"'Playfair Display', serif",kind:'Serif'},
+  {id:'dmserif',label:'DM Serif',css:"'DM Serif Display', serif",kind:'Display'},
+  {id:'josefin',label:'Josefin',css:"'Josefin Sans', sans-serif",kind:'Sans'},
+  {id:'inter',label:'Inter',css:"'Inter', sans-serif",kind:'Sans'},
+  {id:'notoserif',label:'Noto 明體',css:"'Noto Serif TC', serif",kind:'中文 Serif'},
+  {id:'notosans',label:'Noto 黑體',css:"'Noto Sans TC', sans-serif",kind:'中文 Sans'},
+];
+const PRESET_TIME_OPTS=["09:00","09:30","10:00","10:30","11:00","11:30","13:00","13:30","14:00","14:30","16:00","18:00","18:30","19:00"];
+
+const state={
+  year:2026, month:5, weekStart:1, dayLabelStyle:'three',
+  W:1080, H:1920, bgImage:null, bgColor:'#1a6fa3', overlay:0,
+  font:'cormorant', textColor:'#ffffff', textScale:1,
+  showMonth:1, sig:'', sigPos:'br',
+  times:{}, // {dayNum:[ "11:00",...]}
+  defaultTimes:["11:00","14:00","18:00"],
+  editDay:null,
+};
+
+const canvas=document.getElementById('cal');
+const ctx=canvas.getContext('2d');
+
+//// ---- helpers ----
+function $(id){return document.getElementById(id);}
+function seg(id,key,cb){
+  const el=$(id);
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    [...el.children].forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    let v=b.dataset.v;
+    state[key]=isNaN(v)?v:parseFloat(v);
+    if(typeof cb==='function')cb();
+    render(); buildDayGrid();
+  });
+}
+
+//// ---- font picker ----
+const fg=$('fontGrid');
+FONTS.forEach(f=>{
+  const d=document.createElement('div');
+  d.className='font-opt'+(f.id===state.font?' on':'');
+  d.dataset.id=f.id;
+  d.innerHTML=`<div class="name" style="font-family:${f.css}">Aa 一</div><div class="meta">${f.label} · ${f.kind}</div>`;
+  d.onclick=()=>{state.font=f.id;[...fg.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');render();};
+  fg.appendChild(d);
+});
+function fontCss(){return FONTS.find(f=>f.id===state.font).css;}
+
+//// ---- inputs ----
+$('year').oninput=e=>{state.year=parseInt(e.target.value)||2026;buildDayGrid();render();};
+$('month').onchange=e=>{state.month=parseInt(e.target.value);buildDayGrid();render();};
+seg('weekStart','weekStart',()=>{buildHeaders();});
+seg('dayLabelStyle','dayLabelStyle',()=>{buildHeaders();});
+seg('textScale','textScale');
+seg('showMonth','showMonth');
+seg('sigPos','sigPos');
+$('bgColor').oninput=e=>{state.bgColor=e.target.value;render();};
+$('textColor').oninput=e=>{state.textColor=e.target.value;render();};
+$('overlay').oninput=e=>{state.overlay=parseInt(e.target.value);render();};
+$('sig').oninput=e=>{state.sig=e.target.value;render();};
+$('defaultTimes').oninput=e=>{state.defaultTimes=parseTimes(e.target.value);};
+
+function parseTimes(s){return s.split(',').map(x=>x.trim()).filter(Boolean);}
+
+//// ---- dimensions ----
+$('preset').onchange=e=>{
+  if(e.target.value==='custom'){$('customDims').style.display='grid';return;}
+  $('customDims').style.display='none';
+  const [w,h]=e.target.value.split('x').map(Number);
+  state.W=w;state.H=h;render();
+};
+$('cw').oninput=e=>{state.W=parseInt(e.target.value)||1080;render();};
+$('ch').oninput=e=>{state.H=parseInt(e.target.value)||1920;render();};
+
+//// ---- background upload ----
+$('upZone').onclick=()=>$('upFile').click();
+$('upFile').onchange=e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      state.bgImage=img;
+      $('thumb').src=ev.target.result; $('thumb').style.display='block';
+      $('upZone').classList.add('has');
+      render();
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(file);
+};
+
+//// ---- day grid (editor) ----
+function weekdayHeaders(){
+  // order based on weekStart
+  const baseThree=["MON","TUE","WED","THU","FRI","SAT","SUN"];
+  const baseOne=["M","T","W","T","F","S","S"];
+  const baseTc=["一","二","三","四","五","六","日"];
+  let arr = state.dayLabelStyle==='one'?baseOne : state.dayLabelStyle==='tc'?baseTc : baseThree;
+  if(state.weekStart===0){ // Sunday first: rotate last to front
+    arr=[arr[6],...arr.slice(0,6)];
+  }
+  return arr;
+}
+function buildHeaders(){
+  const h=$('dayHeaders'); h.innerHTML='';
+  weekdayHeaders().forEach(t=>{const d=document.createElement('div');d.className='dh';d.textContent=t;h.appendChild(d);});
+}
+function firstColumnOffset(){
+  // JS getDay: 0=Sun..6=Sat
+  const jsDay=new Date(state.year,state.month,1).getDay();
+  if(state.weekStart===1){ // Monday start
+    return (jsDay+6)%7;
+  }
+  return jsDay; // Sunday start
+}
+function daysInMonth(){return new Date(state.year,state.month+1,0).getDate();}
+
+function buildDayGrid(){
+  const grid=$('dayGrid'); grid.innerHTML='';
+  const offset=firstColumnOffset();
+  const dim=daysInMonth();
+  for(let i=0;i<offset;i++){const c=document.createElement('div');c.className='dcell empty';grid.appendChild(c);}
+  for(let d=1;d<=dim;d++){
+    const c=document.createElement('div');
+    const times=state.times[d]||[];
+    c.className='dcell'+(times.length?' has':'');
+    let tHtml=times.slice(0,3).map(t=>`<span>${t}</span>`).join('');
+    if(times.length>3)tHtml+=`<span>+${times.length-3}</span>`;
+    c.innerHTML=`<div class="dn">${d}</div><div class="tms">${tHtml}</div>`;
+    c.onclick=()=>openSheet(d);
+    grid.appendChild(c);
+  }
+}
+
+//// ---- time sheet ----
+const sheetBg=$('sheetBg');
+let sheetSel=[];
+function openSheet(d){
+  state.editDay=d;
+  sheetSel=[...(state.times[d]||[])];
+  $('sheetTitle').textContent=`${MONTHS[state.month]} ${d}`;
+  const wd=new Date(state.year,state.month,d).toLocaleDateString('en-US',{weekday:'long'});
+  $('sheetSub').textContent=wd;
+  buildPresetTimes(); buildSelList();
+  sheetBg.classList.add('show');
+}
+function buildPresetTimes(){
+  const p=$('presetTimes'); p.innerHTML='';
+  PRESET_TIME_OPTS.forEach(t=>{
+    const b=document.createElement('div');
+    b.className='pt'+(sheetSel.includes(t)?' on':'');
+    b.textContent=t;
+    b.onclick=()=>{
+      if(sheetSel.includes(t))sheetSel=sheetSel.filter(x=>x!==t);
+      else sheetSel.push(t);
+      sortSel();buildPresetTimes();buildSelList();
+    };
+    p.appendChild(b);
+  });
+}
+function sortSel(){sheetSel.sort((a,b)=>a.localeCompare(b));}
+function buildSelList(){
+  const l=$('selList'); l.innerHTML='';
+  if(!sheetSel.length){l.innerHTML='<span class="hint">No times selected</span>';return;}
+  sheetSel.forEach(t=>{
+    const c=document.createElement('div');c.className='chip on';
+    c.innerHTML=`${t} <span class="x">×</span>`;
+    c.onclick=()=>{sheetSel=sheetSel.filter(x=>x!==t);buildPresetTimes();buildSelList();};
+    l.appendChild(c);
+  });
+}
+$('addCustom').onclick=()=>{
+  let v=$('customTime').value.trim();
+  if(!v)return;
+  v=normTime(v);
+  if(v && !sheetSel.includes(v)){sheetSel.push(v);sortSel();}
+  $('customTime').value='';buildPresetTimes();buildSelList();
+};
+$('customTime').addEventListener('keydown',e=>{if(e.key==='Enter')$('addCustom').click();});
+function normTime(v){
+  v=v.replace('：',':').replace(/[^\d:]/g,'');
+  if(/^\d{3,4}$/.test(v)){v=v.length===3?'0'+v:v;v=v.slice(0,2)+':'+v.slice(2);}
+  const m=v.match(/^(\d{1,2}):?(\d{0,2})$/);
+  if(!m)return v;
+  let hh=m[1].padStart(2,'0'); let mm=(m[2]||'00').padStart(2,'0');
+  return hh+':'+mm;
+}
+$('sheetDone').onclick=()=>{
+  if(sheetSel.length)state.times[state.editDay]=[...sheetSel];
+  else delete state.times[state.editDay];
+  sheetBg.classList.remove('show');
+  buildDayGrid();render();
+};
+$('sheetClear').onclick=()=>{sheetSel=[];buildPresetTimes();buildSelList();};
+sheetBg.onclick=e=>{if(e.target===sheetBg)sheetBg.classList.remove('show');};
+
+//// ---- bulk ----
+$('bulkClear').onclick=()=>{state.times={};buildDayGrid();render();};
+$('bulkWeekdays').onclick=()=>{
+  const dim=daysInMonth();
+  for(let d=1;d<=dim;d++){
+    const wd=new Date(state.year,state.month,d).getDay();
+    if(wd>=1&&wd<=5)state.times[d]=[...state.defaultTimes];
+  }
+  buildDayGrid();render();
+};
+$('bulkAll').onclick=()=>{
+  const dim=daysInMonth();
+  for(let d=1;d<=dim;d++)state.times[d]=[...state.defaultTimes];
+  buildDayGrid();render();
+};
+
+//// ---- RENDER to canvas ----
+function render(){
+  const W=state.W,H=state.H;
+  canvas.width=W;canvas.height=H;
+
+  // bg
+  if(state.bgImage){
+    const img=state.bgImage;
+    const ir=img.width/img.height, cr=W/H;
+    let dw,dh,dx,dy;
+    if(ir>cr){dh=H;dw=H*ir;dx=(W-dw)/2;dy=0;}
+    else{dw=W;dh=W/ir;dx=0;dy=(H-dh)/2;}
+    ctx.drawImage(img,dx,dy,dw,dh);
+  }else{
+    ctx.fillStyle=state.bgColor;ctx.fillRect(0,0,W,H);
+  }
+  if(state.overlay>0){ctx.fillStyle=`rgba(0,0,0,${state.overlay/100})`;ctx.fillRect(0,0,W,H);}
+
+  ctx.fillStyle=state.textColor;
+  ctx.textAlign='center';
+
+  const fam=fontCss();
+  const sc=state.textScale;
+  const marginX=W*0.07;
+  const gridW=W-marginX*2;
+  const colW=gridW/7;
+
+  let y=H*0.085;
+
+  // month title
+  if(state.showMonth){
+    const title = (state.font==='notoserif'||state.font==='notosans')
+      ? `${state.year} ${MONTHS_TC[state.month]}`
+      : MONTHS[state.month].toUpperCase();
+    ctx.font=`500 ${Math.round(W*0.052*sc)}px ${fam}`;
+    ctx.save();
+    // letter-spacing emulation for latin titles
+    if(!(state.font==='notoserif'||state.font==='notosans')){
+      drawSpaced(title, W/2, y, Math.round(W*0.052*sc), fam, '500', W*0.012);
+    }else{
+      ctx.fillText(title, W/2, y);
+    }
+    ctx.restore();
+    y+=H*0.045;
+  }
+
+  // weekday header row
+  const heads=weekdayHeaders();
+  const headSize=Math.round(W*0.026*sc);
+  ctx.font=`500 ${headSize}px ${fam}`;
+  ctx.globalAlpha=0.85;
+  for(let i=0;i<7;i++){
+    const cx=marginX+colW*i+colW/2;
+    drawSpaced(heads[i],cx,y,headSize,fam,'500',W*0.006);
+  }
+  ctx.globalAlpha=1;
+  y+=H*0.022;
+
+  // grid
+  const offset=firstColumnOffset();
+  const dim=daysInMonth();
+  const totalCells=offset+dim;
+  const rows=Math.ceil(totalCells/7);
+  const gridTop=y;
+  const gridBottom=H*0.93;
+  const rowH=(gridBottom-gridTop)/rows;
+
+  const dayNumSize=Math.round(W*0.03*sc);
+  const timeSize=Math.round(W*0.026*sc);
+
+  for(let cell=0;cell<totalCells;cell++){
+    const r=Math.floor(cell/7), col=cell%7;
+    const cx=marginX+colW*col+colW/2;
+    const cyTop=gridTop+rowH*r;
+    if(cell<offset)continue;
+    const dnum=cell-offset+1;
+    // day number
+    ctx.font=`400 ${dayNumSize}px ${fam}`;
+    ctx.globalAlpha=0.92;
+    ctx.fillText(String(dnum),cx,cyTop+rowH*0.16);
+    ctx.globalAlpha=1;
+    // times
+    const ts=state.times[dnum]||[];
+    ctx.font=`600 ${timeSize}px ${fam}`;
+    ts.forEach((t,i)=>{
+      const ty=cyTop+rowH*0.16+(dayNumSize*0.9)+ i*(timeSize*1.32) + timeSize*0.7;
+      ctx.fillText(t,cx,ty);
+    });
+  }
+
+  // signature
+  if(state.sig.trim()){
+    const sigSize=Math.round(W*0.06*sc);
+    ctx.font=`500 ${sigSize}px ${fam}`;
+    const sy=H*0.965;
+    if(state.sigPos==='bl'){ctx.textAlign='left';ctx.fillText(state.sig,marginX,sy);}
+    else if(state.sigPos==='bc'){ctx.textAlign='center';ctx.fillText(state.sig,W/2,sy);}
+    else{ctx.textAlign='right';ctx.fillText(state.sig,W-marginX,sy);}
+    ctx.textAlign='center';
+  }
+}
+
+function drawSpaced(text,cx,y,size,fam,weight,spacing){
+  ctx.save();
+  ctx.font=`${weight} ${size}px ${fam}`;
+  const chars=[...text];
+  let total=0;
+  chars.forEach(ch=>{total+=ctx.measureText(ch).width+spacing;});
+  total-=spacing;
+  let x=cx-total/2;
+  ctx.textAlign='left';
+  chars.forEach(ch=>{
+    const w=ctx.measureText(ch).width;
+    ctx.fillText(ch,x,y);
+    x+=w+spacing;
+  });
+  ctx.restore();
+  ctx.textAlign='center';
+}
+
+//// ---- download ----
+$('dlBtn').onclick=()=>{
+  render();
+  const a=document.createElement('a');
+  const mlabel=(state.font==='notoserif'||state.font==='notosans')?MONTHS_TC[state.month]:MONTHS[state.month];
+  a.download=`availability_${state.year}_${mlabel}.png`;
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+};
+
+//// ---- init ----
+function init(){
+  state.defaultTimes=parseTimes($('defaultTimes').value);
+  buildHeaders();buildDayGrid();
+  // seed June 2026 example-ish so preview isn't empty
+  render();
+}
+// wait for fonts so canvas measures correctly
+if(document.fonts&&document.fonts.ready){
+  document.fonts.ready.then(()=>{init();setTimeout(render,150);});
+}else{init();}
+init();
+</script>
+</body>
+</html>
