@@ -149,6 +149,59 @@
 
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
   @media (max-width:520px){.twocol{grid-template-columns:1fr;}}
+
+  /* profiles */
+  .pchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:11px;}
+  .pchip{background:var(--panel-2);border:2px solid var(--line);color:var(--text);border-radius:20px;padding:8px 15px;font-size:13px;cursor:pointer;font-weight:600;transition:.12s;}
+  .pchip.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 0 rgba(20,90,45,.18);}
+  .pchip:not(.on):active{background:var(--accent-soft);}
+  .prof-manage{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .prof-manage input{flex:1;min-width:130px;}
+  .prof-btns{display:flex;gap:6px;}
+  .prof-btns button{background:var(--panel-2);border:2px solid var(--line);color:var(--muted);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .prof-btns button:active{background:var(--accent-soft);}
+  .prof-btns button.danger{color:#c0392b;}
+  .prof-row2{display:flex;align-items:center;gap:10px;margin-top:10px;justify-content:space-between;flex-wrap:wrap;}
+  .savest{font-size:11px;font-weight:700;}
+  .savest.saved{color:var(--accent);}
+  .savest.saving{color:var(--muted);}
+  #profSave{background:var(--accent-soft);border:2px solid var(--line);color:var(--accent);border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+  #profSave:active{transform:translateY(1px);}
+
+  /* strikethrough chips + mini-cell */
+  .selchip{gap:6px;}
+  .selchip .chip-t{cursor:pointer;}
+  .selchip.struck .chip-t{text-decoration:line-through;opacity:.72;}
+  .dcell .tms span.st{text-decoration:line-through;opacity:.7;}
+
+  /* lang toggle */
+  .lang-toggle{display:flex;background:var(--panel-2);border:2px solid var(--line);border-radius:10px;overflow:hidden;padding:2px;gap:2px;}
+  .lang-toggle button{background:transparent;border:0;color:var(--muted);padding:5px 9px;font-size:11.5px;font-family:inherit;cursor:pointer;font-weight:700;transition:.15s;border-radius:7px;white-space:nowrap;}
+  .lang-toggle button.on{background:var(--accent);color:#fff;}
+
+  /* undo / redo */
+  .histbtns{display:flex;gap:6px;}
+  .histbtns button{
+    width:38px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--panel);
+    color:var(--text);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 0 rgba(20,90,45,.12);transition:.1s;
+  }
+  .histbtns button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(20,90,45,.12);}
+  .histbtns button:disabled{opacity:.34;cursor:default;box-shadow:none;}
+
+  /* footer + danger zone */
+  footer.foot{text-align:center;margin-top:18px;padding-top:6px;}
+  footer.foot .made{font-size:11px;color:var(--muted);letter-spacing:.3px;}
+  footer.foot details{margin-top:12px;border:2px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden;text-align:left;}
+  footer.foot summary{list-style:none;cursor:pointer;padding:11px 13px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between;}
+  footer.foot summary::-webkit-details-marker{display:none;}
+  footer.foot summary::after{content:'▸';transition:.15s;}
+  footer.foot details[open] summary::after{transform:rotate(90deg);}
+  .danger-body{padding:0 13px 14px;}
+  .danger-body p{font-size:12px;color:var(--muted);line-height:1.5;margin:4px 0 10px;}
+  #storageInfo{font-size:11px;color:var(--muted);margin-bottom:10px;}
+  #eraseBtn{width:100%;background:#fff;border:2px solid #e0a9a2;color:#c0392b;border-radius:11px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;}
+  #eraseBtn:active{background:#fdecea;}
 </style>
 </head>
 <body>
@@ -158,45 +211,76 @@
       <div class="logo">🗓️</div>
       <div>
         <h1>Cal<span class="g">Gen</span></h1>
-        <span class="sub">make your month look good ✦</span>
+        <span class="sub" data-i18n="tagline">製作你的月曆 ✦</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="lang-toggle">
+        <button id="langZh" class="on">中文</button>
+        <button id="langEn">EN</button>
+      </div>
+      <div class="histbtns">
+        <button id="undoBtn" data-i18n-title="undo_title" title="復原 (Ctrl/Cmd+Z)" disabled>↶</button>
+        <button id="redoBtn" data-i18n-title="redo_title" title="重做 (Ctrl/Cmd+Shift+Z)" disabled>↷</button>
       </div>
     </div>
   </header>
 
   <div class="preview-frame">
     <div id="stage"><canvas id="cal"></canvas></div>
-    <div class="hint" style="text-align:center">Tap days below to set times · preview updates live</div>
+    <div class="hint" style="text-align:center" data-i18n="preview_hint">點選下方日期設定時段 · 即時預覽</div>
+  </div>
+
+  <!-- PROFILES -->
+  <div class="section prof-section">
+    <h2 data-i18n="sec_profiles">個人檔案</h2>
+    <div class="pchips" id="profChips"></div>
+    <div class="prof-manage">
+      <input type="text" id="profName" data-i18n-placeholder="prof_name_ph" placeholder="檔案名稱" autocomplete="off">
+      <div class="prof-btns">
+        <button id="profNew" data-i18n="prof_new" data-i18n-title="prof_new_title" title="新增空白檔案">＋ 新增</button>
+        <button id="profDup" data-i18n="prof_dup" data-i18n-title="prof_dup_title" title="複製此檔案">⧉ 複製</button>
+        <button id="profDelete" class="danger" data-i18n-title="prof_del_title" title="刪除此檔案">🗑</button>
+      </div>
+    </div>
+    <div class="prof-row2">
+      <span class="hint" style="margin:0;flex:1;min-width:180px" data-i18n="prof_autosave_hint">時段、背景與字型會自動儲存至選取的檔案 — 僅限此裝置。</span>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span class="savest saved" id="saveState" data-i18n="saved_ok">已儲存 ✓</span>
+        <button id="profSave" data-i18n="save_now">立即儲存</button>
+      </div>
+    </div>
   </div>
 
   <!-- BASICS -->
   <div class="section">
-    <h2>Month &amp; layout</h2>
+    <h2 data-i18n="sec_month_layout">月份與版面</h2>
     <div class="row">
       <div class="field">
-        <label class="lbl">Year</label>
+        <label class="lbl" data-i18n="lbl_year">年份</label>
         <input type="number" id="year" value="2026" min="2000" max="2100">
       </div>
       <div class="field">
-        <label class="lbl">Month</label>
+        <label class="lbl" data-i18n="lbl_month">月份</label>
         <select id="month">
-          <option value="0">January</option><option value="1">February</option>
-          <option value="2">March</option><option value="3">April</option>
-          <option value="4">May</option><option value="5" selected>June</option>
-          <option value="6">July</option><option value="7">August</option>
-          <option value="8">September</option><option value="9">October</option>
-          <option value="10">November</option><option value="11">December</option>
+          <option value="0" data-i18n="m0">一月</option><option value="1" data-i18n="m1">二月</option>
+          <option value="2" data-i18n="m2">三月</option><option value="3" data-i18n="m3">四月</option>
+          <option value="4" data-i18n="m4">五月</option><option value="5" data-i18n="m5" selected>六月</option>
+          <option value="6" data-i18n="m6">七月</option><option value="7" data-i18n="m7">八月</option>
+          <option value="8" data-i18n="m8">九月</option><option value="9" data-i18n="m9">十月</option>
+          <option value="10" data-i18n="m10">十一月</option><option value="11" data-i18n="m11">十二月</option>
         </select>
       </div>
     </div>
     <div class="field" style="margin-top:14px">
-      <label class="lbl">Week starts on</label>
+      <label class="lbl" data-i18n="lbl_week_start">每週起始日</label>
       <div class="seg" id="weekStart">
-        <button data-v="1" class="on">Monday</button>
-        <button data-v="0">Sunday</button>
+        <button data-v="1" class="on" data-i18n="monday">星期一</button>
+        <button data-v="0" data-i18n="sunday">星期日</button>
       </div>
     </div>
     <div class="field" style="margin-top:14px">
-      <label class="lbl">Weekday labels</label>
+      <label class="lbl" data-i18n="lbl_day_labels">星期標籤</label>
       <div class="seg" id="dayLabelStyle">
         <button data-v="three" class="on">MON</button>
         <button data-v="one">M</button>
@@ -207,109 +291,109 @@
 
   <!-- DIMENSIONS -->
   <div class="section">
-    <h2>Canvas dimensions</h2>
+    <h2 data-i18n="sec_dimensions">畫布尺寸</h2>
     <div class="field">
-      <label class="lbl">Preset</label>
+      <label class="lbl" data-i18n="lbl_preset">預設尺寸</label>
       <select id="preset">
-        <option value="1080x1920">Phone story · 1080 × 1920 (9:16)</option>
-        <option value="1080x1350">Portrait post · 1080 × 1350 (4:5)</option>
-        <option value="1080x1080">Square · 1080 × 1080 (1:1)</option>
-        <option value="1242x2208">Tall phone · 1242 × 2208</option>
-        <option value="custom">Custom…</option>
+        <option value="1080x1920" data-i18n="dim_story">手機限時動態 · 1080 × 1920 (9:16)</option>
+        <option value="1080x1350" data-i18n="dim_portrait">直式貼文 · 1080 × 1350 (4:5)</option>
+        <option value="1080x1080" data-i18n="dim_square">正方形 · 1080 × 1080 (1:1)</option>
+        <option value="1242x2208" data-i18n="dim_tall">高手機 · 1242 × 2208</option>
+        <option value="custom" data-i18n="dim_custom">自訂…</option>
       </select>
     </div>
     <div class="grid2" id="customDims" style="display:none">
-      <div class="field"><label class="lbl">Width (px)</label><input type="number" id="cw" value="1080"></div>
-      <div class="field"><label class="lbl">Height (px)</label><input type="number" id="ch" value="1920"></div>
+      <div class="field"><label class="lbl" data-i18n="lbl_width">寬度 (px)</label><input type="number" id="cw" value="1080"></div>
+      <div class="field"><label class="lbl" data-i18n="lbl_height">高度 (px)</label><input type="number" id="ch" value="1920"></div>
     </div>
   </div>
 
   <!-- BACKGROUND -->
   <div class="section">
-    <h2>Background</h2>
+    <h2 data-i18n="sec_background">背景</h2>
     <div class="field">
       <div class="upload" id="upZone">
         <input type="file" id="upFile" accept="image/*" hidden>
         <div class="ico">⬆</div>
-        <div class="t">Upload background image</div>
-        <div class="s">Filled to cover · JPG or PNG</div>
+        <div class="t" data-i18n="upload_t">上傳背景圖片</div>
+        <div class="s" data-i18n="upload_s">填滿覆蓋 · JPG 或 PNG</div>
         <img id="thumb" style="display:none">
       </div>
-      <div class="hint">No image? A solid color is used instead.</div>
+      <div class="hint" data-i18n="upload_hint">未上傳圖片？將使用純色背景。</div>
     </div>
     <div class="twocol">
       <div class="field">
-        <label class="lbl">Fallback / tint color</label>
-        <div class="color-row"><input type="color" id="bgColor" value="#1a6fa3"><span class="hint" style="margin:0">used if no image</span></div>
+        <label class="lbl" data-i18n="lbl_fallback_color">備用／色調顏色</label>
+        <div class="color-row"><input type="color" id="bgColor" value="#1a6fa3"><span class="hint" style="margin:0" data-i18n="color_no_img">無圖片時使用</span></div>
       </div>
       <div class="field">
-        <label class="lbl">Darken overlay</label>
+        <label class="lbl" data-i18n="lbl_overlay">加深遮罩</label>
         <input type="range" id="overlay" min="0" max="70" value="0" style="width:100%">
-        <div class="hint">Helps text pop on busy photos</div>
+        <div class="hint" data-i18n="overlay_hint">讓文字在複雜照片上更清晰</div>
       </div>
     </div>
   </div>
 
   <!-- TYPE -->
   <div class="section">
-    <h2>Typography · per element</h2>
+    <h2 data-i18n="sec_typography">字型 · 各元素</h2>
     <div class="seg style-tabs" id="styleTabs">
-      <button data-v="month" class="on">Month</button>
-      <button data-v="weekday">Wkdys</button>
-      <button data-v="day">Days</button>
-      <button data-v="time">Times</button>
+      <button data-v="month" class="on" data-i18n="tab_month">月份</button>
+      <button data-v="weekday" data-i18n="tab_weekday">週間</button>
+      <button data-v="day" data-i18n="tab_day">日期</button>
+      <button data-v="time" data-i18n="tab_time">時段</button>
     </div>
-    <div class="hint" id="tabHint" style="margin:0 0 10px">Editing: Month title</div>
+    <div class="hint" id="tabHint" style="margin:0 0 10px" data-i18n="tab_hint_month">編輯中：月份標題</div>
     <div class="font-grid" id="fontGrid"></div>
     <div class="twocol" style="margin-top:12px">
       <div class="field" style="margin-bottom:0">
-        <label class="lbl">Color</label>
+        <label class="lbl" data-i18n="lbl_color">顏色</label>
         <div class="color-row"><input type="color" id="elColor" value="#ffffff"></div>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label class="lbl">Size <span class="val" id="sizeVal">1.00×</span></label>
+        <label class="lbl" data-i18n="lbl_size">大小 <span class="val" id="sizeVal">1.00×</span></label>
         <input type="range" id="elSize" min="0.6" max="1.8" step="0.02" value="1">
       </div>
     </div>
     <div class="bulk" style="margin-top:12px">
-      <button id="applyFontAll">Use font on all</button>
-      <button id="applyColorAll">Use color on all</button>
-      <button id="applySizeAll">Use size on all</button>
+      <button id="applyFontAll" data-i18n="apply_font_all">套用字型至全部</button>
+      <button id="applyColorAll" data-i18n="apply_color_all">套用顏色至全部</button>
+      <button id="applySizeAll" data-i18n="apply_size_all">套用大小至全部</button>
     </div>
   </div>
 
   <!-- SIGNATURE -->
   <div class="section">
-    <h2>Title &amp; signature</h2>
+    <h2 data-i18n="sec_signature">標題與簽名</h2>
     <div class="field">
-      <label class="lbl">Show month name at top</label>
+      <label class="lbl" data-i18n="lbl_show_month">頂部顯示月份名稱</label>
       <div class="seg" id="showMonth">
-        <button data-v="1" class="on">Yes</button>
-        <button data-v="0">No</button>
+        <button data-v="1" class="on" data-i18n="yes">是</button>
+        <button data-v="0" data-i18n="no">否</button>
       </div>
     </div>
     <div class="field">
-      <label class="lbl">Signature text <span class="hint" style="display:inline">(corner — like “-EtOH-” or “Jac 六月時段”)</span></label>
-      <input type="text" id="sig" placeholder="e.g. -EtOH-  /  Jac 六月時段" value="">
+      <label class="lbl" data-i18n="lbl_sig_text">簽名文字 <span class="hint" style="display:inline" data-i18n="sig_hint">（角落 — 如「-EtOH-」或「Jac 六月時段」）</span></label>
+      <input type="text" id="sig" data-i18n-placeholder="sig_placeholder" placeholder="例：-EtOH-  /  Jac 六月時段" value="">
     </div>
     <div class="field">
-      <label class="lbl">Signature position</label>
+      <label class="lbl" data-i18n="lbl_sig_pos">簽名位置</label>
       <div class="seg" id="sigPos">
-        <button data-v="bl">Bottom-left</button>
-        <button data-v="br" class="on">Bottom-right</button>
-        <button data-v="bc">Bottom-center</button>
+        <button data-v="bl" data-i18n="pos_bl">左下</button>
+        <button data-v="br" class="on" data-i18n="pos_br">右下</button>
+        <button data-v="bc" data-i18n="pos_bc">置中下方</button>
       </div>
     </div>
     <div class="twocol">
       <div class="field" style="margin-bottom:0">
-        <label class="lbl">Signature font &amp; color</label>
+        <label class="lbl" data-i18n="lbl_sig_font_color">簽名字型與顏色</label>
         <div class="row">
           <select id="sigFont" style="flex:1"></select>
           <input type="color" id="sigColor" value="#ffffff">
         </div>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label class="lbl">Signature size <span class="val" id="sigSizeVal">1.00×</span></label>
+        <label class="lbl" data-i18n="lbl_sig_size">簽名大小 <span class="val" id="sigSizeVal">1.00×</span></label>
         <input type="range" id="sigSize" min="0.6" max="1.8" step="0.02" value="1">
       </div>
     </div>
@@ -317,21 +401,33 @@
 
   <!-- TIMES -->
   <div class="section">
-    <h2>Availability</h2>
-    <div class="hint" style="margin-bottom:8px">Tap any day to add or edit times.</div>
+    <h2 data-i18n="sec_availability">可用時段</h2>
+    <div class="hint" style="margin-bottom:8px" data-i18n="avail_hint">點選任意日期新增或編輯時段。</div>
     <div class="daycal" id="dayHeaders"></div>
     <div class="daycal" id="dayGrid"></div>
     <div class="bulk">
-      <button id="bulkClear">Clear all</button>
-      <button id="bulkWeekdays">Weekdays → preset</button>
-      <button id="bulkAll">All days → preset</button>
+      <button id="bulkClear" data-i18n="bulk_clear">清除全部</button>
+      <button id="bulkWeekdays" data-i18n="bulk_weekdays">平日 → 預設</button>
+      <button id="bulkAll" data-i18n="bulk_all">全部日期 → 預設</button>
     </div>
     <div class="field" style="margin-top:12px">
-      <label class="lbl">Default preset times <span class="hint" style="display:inline">(for the buttons above)</span></label>
+      <label class="lbl" data-i18n="lbl_default_times">預設時段 <span class="hint" style="display:inline" data-i18n="default_times_hint">（上方按鈕使用）</span></label>
       <input type="text" id="defaultTimes" value="11:00, 14:00, 18:00">
-      <div class="hint">Comma-separated. Used by the bulk fill buttons.</div>
+      <div class="hint" data-i18n="default_times_sub">逗號分隔。大量填入按鈕使用。</div>
     </div>
   </div>
+
+  <footer class="foot">
+    <div class="made">hacked together by <strong>alextechtai</strong> ✦</div>
+    <details id="dangerZone">
+      <summary data-i18n="storage_summary">儲存空間與重設</summary>
+      <div class="danger-body">
+        <div id="storageInfo" data-i18n="storage_checking">檢查儲存空間…</div>
+        <p data-i18n="erase_desc">所有內容僅儲存在此裝置的瀏覽器中，不會上傳雲端。若想完全重設，可删除全部檔案、時段、背景與設定。重新載入後將初始化所有檔案。</p>
+        <button id="eraseBtn" data-i18n="erase_btn">删除所有檔案及儲存資料</button>
+      </div>
+    </details>
+  </footer>
 </div>
 
 <!-- TIME SHEET -->
@@ -339,17 +435,18 @@
   <div class="sheet">
     <h3 id="sheetTitle">Times</h3>
     <div class="sd" id="sheetSub"></div>
+    <div class="sel-hint hint" style="margin:0 0 6px" data-i18n="sheet_hint">點擊已選時段可<span style="text-decoration:line-through">劃去</span>（保留顯示但標註為不可用），點擊 × 則完全移除。</div>
     <div class="sel-list" id="selList"></div>
-    <label class="lbl" style="margin-top:6px">Quick add</label>
+    <label class="lbl" style="margin-top:6px" data-i18n="quick_add">快速新增</label>
     <div class="preset-times" id="presetTimes"></div>
-    <label class="lbl">Custom time</label>
+    <label class="lbl" data-i18n="custom_time">自訂時間</label>
     <div class="add-custom">
-      <input type="text" id="customTime" placeholder="e.g. 09:30 or 20:00" inputmode="numeric">
-      <button id="addCustom">Add</button>
+      <input type="text" id="customTime" data-i18n-placeholder="ctime_placeholder" placeholder="例：09:30 或 20:00" inputmode="numeric">
+      <button id="addCustom" data-i18n="add_btn">新增</button>
     </div>
     <div class="sheet-actions">
-      <button class="btn-ghost" id="sheetClear">Clear day</button>
-      <button class="btn-primary" id="sheetDone">Done</button>
+      <button class="btn-ghost" id="sheetClear" data-i18n="clear_day">清除此日</button>
+      <button class="btn-primary" id="sheetDone" data-i18n="done">完成</button>
     </div>
   </div>
 </div>
@@ -357,11 +454,172 @@
 <!-- EXPORT -->
 <div class="exportbar">
   <div class="inner">
-    <button id="dlBtn">Download PNG</button>
+    <button id="dlBtn" data-i18n="dl_btn">下載 PNG</button>
   </div>
 </div>
 
 <script>
+//// ---- i18n ----
+const I18N = {
+  zh: {
+    tagline:'製作你的月曆 ✦',
+    preview_hint:'點選下方日期設定時段 · 即時預覽',
+    sec_profiles:'個人檔案',
+    prof_name_ph:'檔案名稱',
+    prof_new:'＋ 新增', prof_new_title:'新增空白檔案',
+    prof_dup:'⧉ 複製', prof_dup_title:'複製此檔案',
+    prof_del_title:'刪除此檔案',
+    prof_autosave_hint:'時段、背景與字型會自動儲存至選取的檔案 — 僅限此裝置。',
+    saved_ok:'已儲存 ✓', saving:'儲存中…', storage_off:'儲存關閉',
+    save_now:'立即儲存',
+    undo_title:'復原 (Ctrl/Cmd+Z)', redo_title:'重做 (Ctrl/Cmd+Shift+Z)',
+    sec_month_layout:'月份與版面',
+    lbl_year:'年份', lbl_month:'月份',
+    m0:'一月',m1:'二月',m2:'三月',m3:'四月',m4:'五月',m5:'六月',
+    m6:'七月',m7:'八月',m8:'九月',m9:'十月',m10:'十一月',m11:'十二月',
+    lbl_week_start:'每週起始日', monday:'星期一', sunday:'星期日',
+    lbl_day_labels:'星期標籤',
+    sec_dimensions:'畫布尺寸',
+    lbl_preset:'預設尺寸',
+    dim_story:'手機限時動態 · 1080 × 1920 (9:16)',
+    dim_portrait:'直式貼文 · 1080 × 1350 (4:5)',
+    dim_square:'正方形 · 1080 × 1080 (1:1)',
+    dim_tall:'高手機 · 1242 × 2208',
+    dim_custom:'自訂…',
+    lbl_width:'寬度 (px)', lbl_height:'高度 (px)',
+    sec_background:'背景',
+    upload_t:'上傳背景圖片', upload_s:'填滿覆蓋 · JPG 或 PNG',
+    upload_hint:'未上傳圖片？將使用純色背景。',
+    lbl_fallback_color:'備用／色調顏色', color_no_img:'無圖片時使用',
+    lbl_overlay:'加深遮罩', overlay_hint:'讓文字在複雜照片上更清晰',
+    sec_typography:'字型 · 各元素',
+    tab_month:'月份', tab_weekday:'週間', tab_day:'日期', tab_time:'時段',
+    tab_hint_month:'編輯中：月份標題', tab_hint_weekday:'編輯中：週間標題',
+    tab_hint_day:'編輯中：日期數字', tab_hint_time:'編輯中：可用時段',
+    lbl_color:'顏色', lbl_size:'大小',
+    apply_font_all:'套用字型至全部', apply_color_all:'套用顏色至全部', apply_size_all:'套用大小至全部',
+    sec_signature:'標題與簽名',
+    lbl_show_month:'頂部顯示月份名稱', yes:'是', no:'否',
+    lbl_sig_text:'簽名文字', sig_hint:'（角落 — 如「-EtOH-」或「Jac 六月時段」）',
+    sig_placeholder:'例：-EtOH-  /  Jac 六月時段',
+    lbl_sig_pos:'簽名位置', pos_bl:'左下', pos_br:'右下', pos_bc:'置中下方',
+    lbl_sig_font_color:'簽名字型與顏色', lbl_sig_size:'簽名大小',
+    sec_availability:'可用時段', avail_hint:'點選任意日期新增或編輯時段。',
+    bulk_clear:'清除全部', bulk_weekdays:'平日 → 預設', bulk_all:'全部日期 → 預設',
+    lbl_default_times:'預設時段', default_times_hint:'（上方按鈕使用）',
+    default_times_sub:'逗號分隔。大量填入按鈕使用。',
+    storage_summary:'儲存空間與重設',
+    storage_checking:'檢查儲存空間…',
+    storage_used:'已使用儲存空間：',
+    storage_unavail:'此瀏覽器無法取得儲存空間資訊。',
+    erase_desc:'所有內容僅儲存在此裝置的瀏覽器中，不會上傳雲端。若想完全重設，可刪除全部檔案、時段、背景與設定。重新載入後將初始化所有檔案。',
+    erase_btn:'刪除所有檔案及儲存資料',
+    erase_confirm_prompt:'此操作將永久刪除此裝置上所有檔案、時段、背景與設定。\n\n輸入「刪除」以確認：',
+    erase_confirm_word:'刪除',
+    sheet_hint:'點擊已選時段可<span style="text-decoration:line-through">劃去</span>（保留顯示但標注為不可用），點擊 × 則完全移除。',
+    quick_add:'快速新增', custom_time:'自訂時間', add_btn:'新增',
+    clear_day:'清除此日', done:'完成',
+    dl_btn:'下載 PNG',
+    ctime_placeholder:'例：09:30 或 20:00',
+    delete_profile_confirm:'刪除檔案「{name}」？此操作無法復原。',
+    keep_one_profile:'請保留至少一個檔案。',
+    new_profile_name:'新增檔案', copy_suffix:' 副本',
+  },
+  en: {
+    tagline:'make your month look good ✦',
+    preview_hint:'Tap days below to set times · preview updates live',
+    sec_profiles:'Profiles',
+    prof_name_ph:'Profile name',
+    prof_new:'＋ New', prof_new_title:'New blank profile',
+    prof_dup:'⧉ Copy', prof_dup_title:'Duplicate this profile',
+    prof_del_title:'Delete this profile',
+    prof_autosave_hint:'Times, background & fonts save automatically to the selected profile — on this device.',
+    saved_ok:'Saved ✓', saving:'Saving…', storage_off:'Storage off',
+    save_now:'Save now',
+    undo_title:'Undo (Ctrl/Cmd+Z)', redo_title:'Redo (Ctrl/Cmd+Shift+Z)',
+    sec_month_layout:'Month & layout',
+    lbl_year:'Year', lbl_month:'Month',
+    m0:'January',m1:'February',m2:'March',m3:'April',m4:'May',m5:'June',
+    m6:'July',m7:'August',m8:'September',m9:'October',m10:'November',m11:'December',
+    lbl_week_start:'Week starts on', monday:'Monday', sunday:'Sunday',
+    lbl_day_labels:'Weekday labels',
+    sec_dimensions:'Canvas dimensions',
+    lbl_preset:'Preset',
+    dim_story:'Phone story · 1080 × 1920 (9:16)',
+    dim_portrait:'Portrait post · 1080 × 1350 (4:5)',
+    dim_square:'Square · 1080 × 1080 (1:1)',
+    dim_tall:'Tall phone · 1242 × 2208',
+    dim_custom:'Custom…',
+    lbl_width:'Width (px)', lbl_height:'Height (px)',
+    sec_background:'Background',
+    upload_t:'Upload background image', upload_s:'Filled to cover · JPG or PNG',
+    upload_hint:'No image? A solid color is used instead.',
+    lbl_fallback_color:'Fallback / tint color', color_no_img:'used if no image',
+    lbl_overlay:'Darken overlay', overlay_hint:'Helps text pop on busy photos',
+    sec_typography:'Typography · per element',
+    tab_month:'Month', tab_weekday:'Wkdys', tab_day:'Days', tab_time:'Times',
+    tab_hint_month:'Editing: Month title', tab_hint_weekday:'Editing: Weekday header',
+    tab_hint_day:'Editing: Day numbers', tab_hint_time:'Editing: Available times',
+    lbl_color:'Color', lbl_size:'Size',
+    apply_font_all:'Use font on all', apply_color_all:'Use color on all', apply_size_all:'Use size on all',
+    sec_signature:'Title & signature',
+    lbl_show_month:'Show month name at top', yes:'Yes', no:'No',
+    lbl_sig_text:'Signature text', sig_hint:'(corner — like "-EtOH-" or "Jac 六月時段")',
+    sig_placeholder:'e.g. -EtOH-  /  Jac 六月時段',
+    lbl_sig_pos:'Signature position', pos_bl:'Bottom-left', pos_br:'Bottom-right', pos_bc:'Bottom-center',
+    lbl_sig_font_color:'Signature font & color', lbl_sig_size:'Signature size',
+    sec_availability:'Availability', avail_hint:'Tap any day to add or edit times.',
+    bulk_clear:'Clear all', bulk_weekdays:'Weekdays → preset', bulk_all:'All days → preset',
+    lbl_default_times:'Default preset times', default_times_hint:'(for the buttons above)',
+    default_times_sub:'Comma-separated. Used by the bulk fill buttons.',
+    storage_summary:'Storage & reset',
+    storage_checking:'Checking storage…',
+    storage_used:'Storage used: ',
+    storage_unavail:'Storage estimate not available in this browser.',
+    erase_desc:'Everything is saved only in this browser on this device (no cloud). Erase below to wipe every profile, all saved times, backgrounds and settings. All profiles will be re-initialised blank on reload.',
+    erase_btn:'Erase all profiles & stored data',
+    erase_confirm_prompt:'This permanently deletes ALL profiles, saved times, backgrounds and settings on this device.\n\nType ERASE to confirm:',
+    erase_confirm_word:'ERASE',
+    sheet_hint:'Tap a selected time to <span style="text-decoration:line-through">strike it out</span> (keeps it visible but marked unavailable). Tap × to remove it entirely.',
+    quick_add:'Quick add', custom_time:'Custom time', add_btn:'Add',
+    clear_day:'Clear day', done:'Done',
+    dl_btn:'Download PNG',
+    ctime_placeholder:'e.g. 09:30 or 20:00',
+    delete_profile_confirm:'Delete profile "{name}"? This can\'t be undone.',
+    keep_one_profile:'Keep at least one profile.',
+    new_profile_name:'New profile', copy_suffix:' copy',
+  }
+};
+let lang = localStorage.getItem('calgen_lang') || 'zh';
+function t(key){ return (I18N[lang]||I18N.zh)[key] || (I18N.en[key] || key); }
+function applyLang(){
+  // static data-i18n nodes
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    const val=t(key);
+    // use innerHTML for entries that may contain <span> (sheet_hint, sig_hint, lbl_sig_text, lbl_sig_size)
+    const INNER_KEYS=['sheet_hint','sig_hint','lbl_sig_text','lbl_sig_size','lbl_size','tab_hint_month','tab_hint_weekday','tab_hint_day','tab_hint_time'];
+    if(INNER_KEYS.includes(key)) el.innerHTML=val; else el.textContent=val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    el.placeholder=t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    el.title=t(el.dataset.i18nTitle);
+  });
+  // lang toggle state
+  $('langZh').classList.toggle('on', lang==='zh');
+  $('langEn').classList.toggle('on', lang==='en');
+  // dynamic: saveState indicator (only update if it's not mid-save)
+  const ss=$('saveState');
+  if(ss&&ss.classList.contains('saved'))ss.textContent=t('saved_ok');
+  // tabHint reflects current active tab
+  const tabHintKeys={month:'tab_hint_month',weekday:'tab_hint_weekday',day:'tab_hint_day',time:'tab_hint_time'};
+  if(typeof state!=='undefined'&&$('tabHint')) $('tabHint').textContent=t(tabHintKeys[state.activeStyle]||'tab_hint_month');
+}
+$('langZh').onclick=()=>{lang='zh';localStorage.setItem('calgen_lang',lang);applyLang();};
+$('langEn').onclick=()=>{lang='en';localStorage.setItem('calgen_lang',lang);applyLang();};
+
 //// ---- state ----
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHS_TC=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
@@ -380,7 +638,7 @@ function mkStyle(font){return {font:font||'cormorant', color:'#ffffff', scale:1}
 const STYLE_KEYS=['month','weekday','day','time','sig'];
 const state={
   year:2026, month:5, weekStart:1, dayLabelStyle:'three',
-  W:1080, H:1920, bgImage:null, bgColor:'#1a6fa3', overlay:0,
+  W:1080, H:1920, bgImage:null, bgDataUrl:null, bgColor:'#1a6fa3', overlay:0,
   showMonth:1, sig:'', sigPos:'br',
   // each text element gets its own font / color / size
   styles:{
@@ -392,6 +650,7 @@ const state={
   },
   activeStyle:'month',
   times:{}, // {dayNum:[ "11:00",...]}
+  struck:{}, // {dayNum:[ "11:00",...]}  times shown but crossed out (no longer available)
   defaultTimes:["11:00","14:00","18:00"],
   editDay:null,
 };
@@ -429,7 +688,7 @@ function fontCss(id){return FONTS.find(f=>f.id===id).css;}
 function isTCFont(id){return id==='notoserif'||id==='notosans';}
 
 //// ---- per-element style editor ----
-const TAB_HINT={month:'Editing: Month title',weekday:'Editing: Weekday header',day:'Editing: Day numbers',time:'Editing: Available times'};
+const TAB_HINT_KEYS={month:'tab_hint_month',weekday:'tab_hint_weekday',day:'tab_hint_day',time:'tab_hint_time'};
 function syncStyleControls(){
   const s=state.styles[state.activeStyle];
   [...fg.children].forEach(c=>c.classList.toggle('on',c.dataset.id===s.font));
@@ -442,7 +701,7 @@ $('styleTabs').addEventListener('click',e=>{
   [...$('styleTabs').children].forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
   state.activeStyle=b.dataset.v;
-  $('tabHint').textContent=TAB_HINT[state.activeStyle];
+  $('tabHint').textContent=t(TAB_HINT_KEYS[state.activeStyle]);
   syncStyleControls();
 });
 $('elColor').oninput=e=>{state.styles[state.activeStyle].color=e.target.value;render();};
@@ -484,7 +743,7 @@ seg('sigPos','sigPos');
 $('bgColor').oninput=e=>{state.bgColor=e.target.value;render();};
 $('overlay').oninput=e=>{state.overlay=parseInt(e.target.value);render();};
 $('sig').oninput=e=>{state.sig=e.target.value;render();};
-$('defaultTimes').oninput=e=>{state.defaultTimes=parseTimes(e.target.value);};
+$('defaultTimes').oninput=e=>{state.defaultTimes=parseTimes(e.target.value);if(typeof scheduleSave==='function')scheduleSave();};
 
 function parseTimes(s){return s.split(',').map(x=>x.trim()).filter(Boolean);}
 
@@ -507,6 +766,7 @@ $('upFile').onchange=e=>{
     const img=new Image();
     img.onload=()=>{
       state.bgImage=img;
+      state.bgDataUrl=ev.target.result;
       $('thumb').src=ev.target.result; $('thumb').style.display='block';
       $('upZone').classList.add('has');
       render();
@@ -550,8 +810,9 @@ function buildDayGrid(){
   for(let d=1;d<=dim;d++){
     const c=document.createElement('div');
     const times=state.times[d]||[];
+    const struck=state.struck[d]||[];
     c.className='dcell'+(times.length?' has':'');
-    let tHtml=times.slice(0,3).map(t=>`<span>${t}</span>`).join('');
+    let tHtml=times.slice(0,3).map(t=>`<span class="${struck.includes(t)?'st':''}">${t}</span>`).join('');
     if(times.length>3)tHtml+=`<span>+${times.length-3}</span>`;
     c.innerHTML=`<div class="dn">${d}</div><div class="tms">${tHtml}</div>`;
     c.onclick=()=>openSheet(d);
@@ -561,10 +822,11 @@ function buildDayGrid(){
 
 //// ---- time sheet ----
 const sheetBg=$('sheetBg');
-let sheetSel=[];
+let sheetSel=[], sheetStruck=[];
 function openSheet(d){
   state.editDay=d;
   sheetSel=[...(state.times[d]||[])];
+  sheetStruck=[...(state.struck[d]||[])].filter(t=>sheetSel.includes(t));
   $('sheetTitle').textContent=`${MONTHS[state.month]} ${d}`;
   const wd=new Date(state.year,state.month,d).toLocaleDateString('en-US',{weekday:'long'});
   $('sheetSub').textContent=wd;
@@ -578,7 +840,7 @@ function buildPresetTimes(){
     b.className='pt'+(sheetSel.includes(t)?' on':'');
     b.textContent=t;
     b.onclick=()=>{
-      if(sheetSel.includes(t))sheetSel=sheetSel.filter(x=>x!==t);
+      if(sheetSel.includes(t)){sheetSel=sheetSel.filter(x=>x!==t);sheetStruck=sheetStruck.filter(x=>x!==t);}
       else sheetSel.push(t);
       sortSel();buildPresetTimes();buildSelList();
     };
@@ -590,9 +852,22 @@ function buildSelList(){
   const l=$('selList'); l.innerHTML='';
   if(!sheetSel.length){l.innerHTML='<span class="hint">No times selected</span>';return;}
   sheetSel.forEach(t=>{
-    const c=document.createElement('div');c.className='chip on';
-    c.innerHTML=`${t} <span class="x">×</span>`;
-    c.onclick=()=>{sheetSel=sheetSel.filter(x=>x!==t);buildPresetTimes();buildSelList();};
+    const isStruck=sheetStruck.includes(t);
+    const c=document.createElement('div');
+    c.className='chip on selchip'+(isStruck?' struck':'');
+    const label=document.createElement('span');
+    label.className='chip-t';
+    label.textContent=t;
+    label.title='Tap to strike through / un-strike';
+    label.onclick=()=>{
+      if(sheetStruck.includes(t))sheetStruck=sheetStruck.filter(x=>x!==t);
+      else sheetStruck.push(t);
+      buildSelList();
+    };
+    const rm=document.createElement('span');
+    rm.className='x'; rm.textContent='×'; rm.title='Remove this time';
+    rm.onclick=(ev)=>{ev.stopPropagation();sheetSel=sheetSel.filter(x=>x!==t);sheetStruck=sheetStruck.filter(x=>x!==t);buildPresetTimes();buildSelList();};
+    c.appendChild(label); c.appendChild(rm);
     l.appendChild(c);
   });
 }
@@ -613,27 +888,33 @@ function normTime(v){
   return hh+':'+mm;
 }
 $('sheetDone').onclick=()=>{
-  if(sheetSel.length)state.times[state.editDay]=[...sheetSel];
-  else delete state.times[state.editDay];
+  if(sheetSel.length){
+    state.times[state.editDay]=[...sheetSel];
+    const st=sheetStruck.filter(t=>sheetSel.includes(t));
+    if(st.length)state.struck[state.editDay]=st; else delete state.struck[state.editDay];
+  }else{
+    delete state.times[state.editDay];
+    delete state.struck[state.editDay];
+  }
   sheetBg.classList.remove('show');
   buildDayGrid();render();
 };
-$('sheetClear').onclick=()=>{sheetSel=[];buildPresetTimes();buildSelList();};
+$('sheetClear').onclick=()=>{sheetSel=[];sheetStruck=[];buildPresetTimes();buildSelList();};
 sheetBg.onclick=e=>{if(e.target===sheetBg)sheetBg.classList.remove('show');};
 
 //// ---- bulk ----
-$('bulkClear').onclick=()=>{state.times={};buildDayGrid();render();};
+$('bulkClear').onclick=()=>{state.times={};state.struck={};buildDayGrid();render();};
 $('bulkWeekdays').onclick=()=>{
   const dim=daysInMonth();
   for(let d=1;d<=dim;d++){
     const wd=new Date(state.year,state.month,d).getDay();
-    if(wd>=1&&wd<=5)state.times[d]=[...state.defaultTimes];
+    if(wd>=1&&wd<=5){state.times[d]=[...state.defaultTimes];delete state.struck[d];}
   }
   buildDayGrid();render();
 };
 $('bulkAll').onclick=()=>{
   const dim=daysInMonth();
-  for(let d=1;d<=dim;d++)state.times[d]=[...state.defaultTimes];
+  for(let d=1;d<=dim;d++){state.times[d]=[...state.defaultTimes];delete state.struck[d];}
   buildDayGrid();render();
 };
 
@@ -728,11 +1009,25 @@ function render(){
     ctx.globalAlpha=1;
     // times
     const ts=state.times[dnum]||[];
+    const stk=state.struck[dnum]||[];
     ctx.fillStyle=timeStyle.color;
     ctx.font=`600 ${timeSize}px ${timeFam}`;
     ts.forEach((t,i)=>{
       const ty=cyTop+rowH*0.16+(dayNumSize*0.9)+ i*(timeSize*1.32) + timeSize*0.7;
       ctx.fillText(t,cx,ty);
+      if(stk.includes(t)){
+        const tw=ctx.measureText(t).width;
+        const lineY=ty - timeSize*0.30; // through the visual middle of the glyphs
+        ctx.save();
+        ctx.strokeStyle=timeStyle.color;
+        ctx.lineWidth=Math.max(1.4, timeSize*0.09);
+        ctx.lineCap='round';
+        ctx.beginPath();
+        ctx.moveTo(cx - tw/2 - timeSize*0.10, lineY);
+        ctx.lineTo(cx + tw/2 + timeSize*0.10, lineY);
+        ctx.stroke();
+        ctx.restore();
+      }
     });
   }
 
@@ -749,6 +1044,7 @@ function render(){
     else{ctx.textAlign='right';ctx.fillText(state.sig,W-marginX,sy);}
     ctx.textAlign='center';
   }
+  if(typeof scheduleSave==='function')scheduleSave();
 }
 
 function drawSpaced(text,cx,y,size,fam,weight,spacing){
@@ -779,19 +1075,303 @@ $('dlBtn').onclick=()=>{
   a.click();
 };
 
+//// ================= PROFILES (IndexedDB, fully local) =================
+const DB_NAME='calgen', STORE='profiles', DB_VER=1;
+let _db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    if(_db)return res(_db);
+    if(!window.indexedDB)return rej(new Error('no-idb'));
+    const rq=indexedDB.open(DB_NAME,DB_VER);
+    rq.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});};
+    rq.onsuccess=e=>{_db=e.target.result;res(_db);};
+    rq.onerror=e=>rej(e.target.error);
+  });
+}
+function idbPut(o){return openDB().then(db=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put(o);t.oncomplete=()=>res();t.onerror=e=>rej(e.target.error);}));}
+function idbAll(){return openDB().then(db=>new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=e=>rej(e.target.error);}));}
+function idbDel(id){return openDB().then(db=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).delete(id);t.oncomplete=()=>res();t.onerror=e=>rej(e.target.error);}));}
+
+let profiles=[], activeId=null, _saveTimer=null, suspendSave=false, _profBooted=false;
+function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+// --- snapshot / restore the full editable state ---
+function serializeState(){
+  return {
+    year:state.year, month:state.month, weekStart:state.weekStart, dayLabelStyle:state.dayLabelStyle,
+    W:state.W, H:state.H, bgColor:state.bgColor, overlay:state.overlay,
+    showMonth:state.showMonth, sig:state.sig, sigPos:state.sigPos,
+    styles:JSON.parse(JSON.stringify(state.styles)),
+    times:JSON.parse(JSON.stringify(state.times)),
+    struck:JSON.parse(JSON.stringify(state.struck||{})),
+    defaultTimes:[...state.defaultTimes],
+    bgDataUrl:state.bgDataUrl||null,
+  };
+}
+function defaultData(){
+  return {
+    year:2026,month:5,weekStart:1,dayLabelStyle:'three',
+    W:1080,H:1920,bgColor:'#1a6fa3',overlay:0,showMonth:1,sig:'',sigPos:'br',
+    styles:{month:mkStyle('cormorant'),weekday:mkStyle('cormorant'),day:mkStyle('cormorant'),time:mkStyle('cormorant'),sig:mkStyle('cormorant')},
+    times:{},struck:{},defaultTimes:['11:00','14:00','18:00'],bgDataUrl:null,
+  };
+}
+function setSeg(id,val){const el=$(id);if(!el)return;[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.v===String(val)));}
+function applyStateToControls(){
+  $('year').value=state.year;
+  $('month').value=state.month;
+  setSeg('weekStart',state.weekStart);
+  setSeg('dayLabelStyle',state.dayLabelStyle);
+  setSeg('showMonth',state.showMonth);
+  setSeg('sigPos',state.sigPos);
+  const pv=`${state.W}x${state.H}`, psel=$('preset');
+  const known=[...psel.options].some(o=>o.value===pv);
+  if(known){psel.value=pv;$('customDims').style.display='none';}
+  else{psel.value='custom';$('customDims').style.display='grid';$('cw').value=state.W;$('ch').value=state.H;}
+  $('bgColor').value=state.bgColor;
+  $('overlay').value=state.overlay;
+  $('sig').value=state.sig;
+  $('defaultTimes').value=state.defaultTimes.join(', ');
+  syncSig(); syncStyleControls();
+}
+function applyState(d){
+  Object.assign(state,{
+    year:d.year,month:d.month,weekStart:d.weekStart,dayLabelStyle:d.dayLabelStyle,
+    W:d.W,H:d.H,bgColor:d.bgColor,overlay:d.overlay,
+    showMonth:d.showMonth,sig:d.sig,sigPos:d.sigPos,
+    styles:JSON.parse(JSON.stringify(d.styles)),
+    times:JSON.parse(JSON.stringify(d.times||{})),
+    struck:JSON.parse(JSON.stringify(d.struck||{})),
+    defaultTimes:[...(d.defaultTimes||['11:00','14:00','18:00'])],
+    bgDataUrl:d.bgDataUrl||null,
+  });
+  if(d.bgDataUrl){
+    const img=new Image();
+    img.onload=()=>{state.bgImage=img;$('thumb').src=d.bgDataUrl;$('thumb').style.display='block';$('upZone').classList.add('has');render();};
+    img.src=d.bgDataUrl;
+  }else{
+    state.bgImage=null;$('thumb').style.display='none';$('thumb').src='';$('upZone').classList.remove('has');
+  }
+  applyStateToControls();
+  buildHeaders(); buildDayGrid(); render();
+}
+
+// --- save indicator + autosave ---
+function updateSaveState(s){
+  const el=$('saveState'); if(!el)return;
+  if(s==='saving'){el.textContent=t('saving');el.className='savest saving';}
+  else{el.textContent=t('saved_ok');el.className='savest saved';}
+}
+function scheduleSave(){
+  if(suspendSave||!activeId)return;
+  updateSaveState('saving');
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(saveActive,500);
+  scheduleHistory();
+}
+async function saveActive(){
+  clearTimeout(_saveTimer);
+  const p=profiles.find(x=>x.id===activeId); if(!p)return;
+  p.data=serializeState(); p.updatedAt=Date.now();
+  try{await idbPut(p);updateSaveState('saved');}catch(e){console.error('save failed',e);}
+}
+
+// --- undo / redo history (session only — NOT saved, cleared on page reload) ---
+const HISTORY_MAX=60;
+let history=[], hIndex=-1, histTimer=null, suspendHistory=false;
+// pool background images so 60 snapshots don't each keep a full copy in memory
+let imgPool=new Map(), imgPoolRev=new Map(), imgKeySeq=0;
+function poolImage(url){
+  if(url==null)return null;
+  if(imgPool.has(url))return imgPool.get(url);
+  const k='i'+(imgKeySeq++); imgPool.set(url,k); imgPoolRev.set(k,url); return k;
+}
+function snapForHistory(){
+  const d=serializeState();
+  d.bgRef=poolImage(d.bgDataUrl); delete d.bgDataUrl;
+  return JSON.stringify(d);
+}
+function fromHistory(snap){
+  const d=JSON.parse(snap);
+  d.bgDataUrl=(d.bgRef!=null)?(imgPoolRev.get(d.bgRef)||null):null;
+  delete d.bgRef; return d;
+}
+function updateHistButtons(){
+  const u=$('undoBtn'), r=$('redoBtn');
+  if(u)u.disabled=(hIndex<=0);
+  if(r)r.disabled=(hIndex>=history.length-1);
+}
+function resetHistory(){
+  imgPool=new Map(); imgPoolRev=new Map(); imgKeySeq=0;
+  history=[snapForHistory()]; hIndex=0; updateHistButtons();
+}
+function pushHistory(){
+  if(suspendHistory||!activeId)return;
+  const snap=snapForHistory();
+  if(history[hIndex]===snap)return;           // nothing actually changed
+  history=history.slice(0,hIndex+1);           // drop any redo tail
+  history.push(snap);
+  if(history.length>HISTORY_MAX)history.shift();// bounded — oldest edit falls off
+  hIndex=history.length-1;
+  updateHistButtons();
+}
+function scheduleHistory(){
+  if(suspendHistory||!activeId)return;
+  clearTimeout(histTimer);
+  histTimer=setTimeout(pushHistory,600);       // coalesce rapid edits (e.g. slider drags)
+}
+function restoreSnapshot(snap){
+  suspendHistory=true; suspendSave=true;
+  applyState(fromHistory(snap));
+  suspendSave=false; suspendHistory=false;
+  updateHistButtons();
+  saveActive();                                // persist the undone/redone result
+}
+function undo(){ if(hIndex<=0)return; clearTimeout(histTimer); hIndex--; restoreSnapshot(history[hIndex]); }
+function redo(){ if(hIndex>=history.length-1)return; clearTimeout(histTimer); hIndex++; restoreSnapshot(history[hIndex]); }
+$('undoBtn').onclick=undo;
+$('redoBtn').onclick=redo;
+document.addEventListener('keydown',e=>{
+  const tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return; // let inputs do native undo
+  const mod=e.metaKey||e.ctrlKey;
+  if(mod&&e.key.toLowerCase()==='z'){e.preventDefault(); e.shiftKey?redo():undo();}
+  else if(mod&&e.key.toLowerCase()==='y'){e.preventDefault(); redo();}
+});
+
+// --- erase everything / storage estimate ---
+async function refreshStorageInfo(){
+  const el=$('storageInfo'); if(!el)return;
+  try{
+    if(navigator.storage&&navigator.storage.estimate){
+      const est=await navigator.storage.estimate();
+      const mb=(est.usage||0)/1048576;
+      el.textContent=t('storage_used')+mb.toFixed(mb<10?2:1)+' MB';
+    }else{el.textContent=t('storage_unavail');}
+  }catch(e){el.textContent='';}
+}
+$('dangerZone').addEventListener('toggle',e=>{if(e.target.open)refreshStorageInfo();});
+$('eraseBtn').onclick=async()=>{
+  const ans=prompt(t('erase_confirm_prompt'));
+  if(ans!==t('erase_confirm_word'))return;
+  try{if(_db){_db.close();_db=null;}}catch(e){}
+  await new Promise(res=>{
+    let done=false; const fin=()=>{if(!done){done=true;res();}};
+    const rq=indexedDB.deleteDatabase(DB_NAME);
+    rq.onsuccess=fin; rq.onerror=fin; rq.onblocked=fin;
+    setTimeout(fin,1500);
+  });
+  try{localStorage.removeItem('calgen_active');}catch(e){}
+  location.reload();
+};
+
+// --- profile list UI ---
+function renderProfiles(){
+  const wrap=$('profChips'); wrap.innerHTML='';
+  profiles.forEach(p=>{
+    const c=document.createElement('div');
+    c.className='pchip'+(p.id===activeId?' on':'');
+    c.dataset.pid=p.id;
+    c.textContent=p.name||'Untitled';
+    c.onclick=()=>switchProfile(p.id);
+    wrap.appendChild(c);
+  });
+  const act=profiles.find(p=>p.id===activeId);
+  $('profName').value=act?act.name:'';
+}
+async function switchProfile(id){
+  if(id===activeId)return;
+  await saveActive();
+  activeId=id; localStorage.setItem('calgen_active',id);
+  const p=profiles.find(x=>x.id===id);
+  suspendSave=true; suspendHistory=true; applyState(p.data); suspendSave=false; suspendHistory=false;
+  resetHistory();
+  renderProfiles(); updateSaveState('saved');
+}
+async function createProfile(dup){
+  await saveActive();
+  const src=dup?profiles.find(p=>p.id===activeId):null;
+  const base=src?JSON.parse(JSON.stringify(src.data)):defaultData();
+  const name=uniqueName(src?src.name+t('copy_suffix'):t('new_profile_name'));
+  const p={id:uid(),name:name,updatedAt:Date.now(),data:base};
+  profiles.push(p); await idbPut(p);
+  activeId=p.id; localStorage.setItem('calgen_active',p.id);
+  suspendSave=true; suspendHistory=true; applyState(p.data); suspendSave=false; suspendHistory=false;
+  resetHistory();
+  renderProfiles(); updateSaveState('saved');
+  $('profName').focus(); $('profName').select();
+}
+function uniqueName(base){
+  let n=base,i=2;
+  const names=profiles.map(p=>p.name);
+  while(names.includes(n)){n=base+' '+i;i++;}
+  return n;
+}
+async function deleteProfile(){
+  if(profiles.length<=1){alert(t('keep_one_profile'));return;}
+  const p=profiles.find(x=>x.id===activeId);
+  if(!confirm(t('delete_profile_confirm').replace('{name}',p.name)))return;
+  await idbDel(activeId);
+  profiles=profiles.filter(x=>x.id!==activeId);
+  activeId=profiles[0].id; localStorage.setItem('calgen_active',activeId);
+  suspendSave=true; suspendHistory=true; applyState(profiles[0].data); suspendSave=false; suspendHistory=false;
+  resetHistory();
+  renderProfiles(); updateSaveState('saved');
+}
+
+// --- wire buttons ---
+$('profName').oninput=e=>{
+  const p=profiles.find(x=>x.id===activeId); if(!p)return;
+  p.name=e.target.value;
+  const chip=$('profChips').querySelector('.pchip.on'); if(chip)chip.textContent=p.name||'Untitled';
+  scheduleSave();
+};
+$('profNew').onclick=()=>createProfile(false);
+$('profDup').onclick=()=>createProfile(true);
+$('profDelete').onclick=deleteProfile;
+$('profSave').onclick=()=>saveActive();
+
+async function bootProfiles(){
+  if(_profBooted)return; _profBooted=true;
+  try{
+    profiles=await idbAll();
+    if(!profiles.length){
+      // first ever run: seed the two starter profiles
+      profiles=[
+        {id:uid(),name:'CHUN',updatedAt:Date.now(),data:defaultData()},
+        {id:uid(),name:'JAC',updatedAt:Date.now(),data:defaultData()},
+      ];
+      for(const p of profiles)await idbPut(p);
+    }
+    activeId=localStorage.getItem('calgen_active');
+    if(!profiles.some(p=>p.id===activeId))activeId=profiles[0].id;
+    localStorage.setItem('calgen_active',activeId);
+    renderProfiles();
+    const act=profiles.find(p=>p.id===activeId);
+    suspendSave=true; suspendHistory=true; applyState(act.data); suspendSave=false; suspendHistory=false;
+    resetHistory();
+    updateSaveState('saved');
+  }catch(e){
+    console.error('Profiles unavailable:',e);
+    const el=$('saveState'); if(el){el.textContent=t('storage_off');el.className='savest saving';}
+  }
+}
+
 //// ---- init ----
 function init(){
   state.defaultTimes=parseTimes($('defaultTimes').value);
   buildHeaders();buildDayGrid();
   syncStyleControls();syncSig();
-  $('tabHint').textContent=TAB_HINT[state.activeStyle];
+  $('tabHint').textContent=t(TAB_HINT_KEYS[state.activeStyle]);
+  applyLang();
   render();
 }
 // wait for fonts so canvas measures correctly
 if(document.fonts&&document.fonts.ready){
-  document.fonts.ready.then(()=>{init();setTimeout(render,150);});
+  document.fonts.ready.then(()=>{init();bootProfiles().then(()=>applyLang());setTimeout(render,150);});
 }else{init();}
 init();
+bootProfiles().then(()=>applyLang());
 </script>
 </body>
 </html>
