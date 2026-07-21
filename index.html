@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CalGen · Availability Calendar Generator</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="favicon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;500;600&family=Josefin+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -30,8 +34,8 @@
   header.app{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px;}
   header.app .brand{display:flex;align-items:center;gap:9px;}
   header.app .logo{
-    width:34px;height:34px;border-radius:11px;background:var(--accent);color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:18px;
+    width:34px;height:34px;border-radius:11px;
+    object-fit:contain;
     box-shadow:0 3px 0 rgba(20,90,45,.25);transform:rotate(-4deg);
   }
   header.app h1{font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:24px;letter-spacing:.5px;margin:0;line-height:1;}
@@ -208,7 +212,7 @@
 <div class="wrap">
   <header class="app">
     <div class="brand">
-      <div class="logo">🗓️</div>
+      <img src="calgen_logo.png" alt="CalGen Logo" class="logo">
       <div>
         <h1>Cal<span class="g">Gen</span></h1>
         <span class="sub" data-i18n="tagline">製作你的月曆 ✦</span>
