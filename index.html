@@ -1364,12 +1364,24 @@ function init(){
   syncStyleControls();syncSig();
   $('tabHint').textContent=t(TAB_HINT_KEYS[state.activeStyle]);
   applyLang();
-  render();
+  // DO NOT call render() here - wait for bootProfiles to finish
 }
 // wait for fonts so canvas measures correctly
 if(document.fonts&&document.fonts.ready){
-  document.fonts.ready.then(()=>{init();bootProfiles().then(()=>applyLang());setTimeout(render,150);});
-}else{init();bootProfiles().then(()=>applyLang());}
+  document.fonts.ready.then(()=>{
+    init();
+    bootProfiles().then(()=>{
+      applyLang();
+      setTimeout(render,150);
+    });
+  });
+}else{
+  init();
+  bootProfiles().then(()=>{
+    applyLang();
+    setTimeout(render,150);
+  });
+}
 </script>
 </body>
 </html>
