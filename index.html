@@ -1286,7 +1286,7 @@ async function switchProfile(id){
   const p=profiles.find(x=>x.id===id);
   suspendSave=true; suspendHistory=true; applyState(p.data); suspendSave=false; suspendHistory=false;
   resetHistory();
-  renderProfiles(); updateSaveState('saved');
+  renderProfiles(); updateSaveState('saved'); render();
 }
 async function createProfile(dup){
   await saveActive();
@@ -1298,7 +1298,7 @@ async function createProfile(dup){
   activeId=p.id; localStorage.setItem('calgen_active',p.id);
   suspendSave=true; suspendHistory=true; applyState(p.data); suspendSave=false; suspendHistory=false;
   resetHistory();
-  renderProfiles(); updateSaveState('saved');
+  renderProfiles(); updateSaveState('saved'); render();
   $('profName').focus(); $('profName').select();
 }
 function uniqueName(base){
@@ -1316,7 +1316,7 @@ async function deleteProfile(){
   activeId=profiles[0].id; localStorage.setItem('calgen_active',activeId);
   suspendSave=true; suspendHistory=true; applyState(profiles[0].data); suspendSave=false; suspendHistory=false;
   resetHistory();
-  renderProfiles(); updateSaveState('saved');
+  renderProfiles(); updateSaveState('saved'); render();
 }
 
 // --- wire buttons ---
@@ -1369,9 +1369,7 @@ function init(){
 // wait for fonts so canvas measures correctly
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(()=>{init();bootProfiles().then(()=>applyLang());setTimeout(render,150);});
-}else{init();}
-init();
-bootProfiles().then(()=>applyLang());
+}else{init();bootProfiles().then(()=>applyLang());}
 </script>
 </body>
 </html>
